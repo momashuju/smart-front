@@ -20,11 +20,17 @@
           <div :class="setSuccessClass(item.status)">{{item.status}}</div>
         </div>
         <div style="display: flex;flex-direction: row" v-if="index===log_index">
+
           <div class="item-params" >
+            <div class="item-param" >
+              <div class="param-name">参数名:</div>
+              <div class="param-value">参数值</div>
+            </div>
             <div class="item-param" v-for="param of item.params">
               <div class="param-name">{{param.name}}:</div>
               <div class="param-value">{{param.value}}</div>
             </div>
+
             <div class="img-button" v-if="item.status==='success'">
               <a href="javascript:void(0);" v-on:click="getImage()">下载结果</a>
             </div>
@@ -159,27 +165,24 @@
 <style scoped>
 
   .work-history{
-    width: 100%;
-    margin-top: 5%;
-    position: relative;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    padding-left: 10%;
   }
   .title{
-    width: 30%;
-    height: 20px;
-    font-size: 16px;
+    width: 100%;
+    height: 30px;
+    font-size: 20px;
     box-shadow: 0 2px 8px #f0f1f2;
-    position: absolute;
-    top: 15%;
-    left: 22%;
+    padding-top: 20px;
     text-align: left;
   }
 
   .content{
     width: 80%;
     max-height: 75vh;
-    position: absolute;
-    left: 20%;
-    padding-top: 30px;
+    padding-top: 20px;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -222,7 +225,7 @@
     text-align:  center;
     font-size: 16px;
     position: absolute;
-    left: 40%;
+    left: 50%;
     top:10px;
   }
 
@@ -231,7 +234,7 @@
     text-align:  center;
     font-size: 16px;
     position: absolute;
-    left: 50%;
+    left: 70%;
     top:10px;
   }
 
@@ -290,7 +293,7 @@
     text-align:  center;
     font-size: 16px;
     position: absolute;
-    left: 40%;
+    left: 50%;
     top:10px;
   }
 
@@ -299,7 +302,7 @@
     text-align:  center;
     font-size: 16px;
     position: absolute;
-    left: 50%;
+    left: 70%;
     top:10px;
   }
 
@@ -317,13 +320,13 @@
 
   .res-img{
     width: 80%;
-    max-height: 70%;
+    max-height: 80%;
     text-align: left;
   }
 
   .result-img-div{
-    max-width: 70%;
-    max-height: 70%;
+    width: 100%;
+    height: 100%;
   }
 
   .item-param{

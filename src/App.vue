@@ -1,15 +1,20 @@
 <template>
   <div id="app">
     <Header/>
-    <router-view/>
+    <div style="display: flex;flex-direction: row;flex-wrap: nowrap">
+      <navigation/>
+      <router-view/>
+    </div>
+
   </div>
 </template>
 
 <script>
   import Header from "./components/Header";
+  import navigation from "./components/Navigation";
 export default {
   name: 'App',
-  components:{Header}
+  components:{Header,navigation}
 }
 </script>
 
