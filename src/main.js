@@ -7,12 +7,16 @@ import axios from 'axios'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css';
 import { FormModel } from 'ant-design-vue';
-Vue.use(Antd)
-Vue.use(FormModel)
-Vue.config.productionTip = false
-Vue.prototype.$axios = axios
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+Vue.use(Antd);
+Vue.use(FormModel);
+Vue.use(ElementUI);
+Vue.config.productionTip = false;
+Vue.prototype.$axios = axios;
 //axios.defaults.baseURL = 'http://106.15.236.153'
-axios.defaults.baseURL = 'http://127.0.0.1:5000'
+axios.defaults.baseURL = 'http://127.0.0.1:5000';
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

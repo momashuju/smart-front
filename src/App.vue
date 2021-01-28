@@ -1,20 +1,16 @@
 <template>
   <div id="app">
-    <Header/>
-    <div style="display: flex;flex-direction: row;flex-wrap: nowrap">
-      <navigation/>
-      <router-view/>
-    </div>
-
+        <router-view/>
   </div>
 </template>
 
 <script>
-  import Header from "./components/Header";
-  import navigation from "./components/Navigation";
 export default {
   name: 'App',
-  components:{Header,navigation}
+  data(){
+    return{
+    }
+  }
 }
 </script>
 

@@ -1,32 +1,32 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '@/components/HelloWorld'
-import UserPage from '@/components/UserPage'
-import WorkHistory from '@/components/WorkHistory'
-import WorkSpace from '@/components/WorkSpace'
+import TaskInfo from '@/components/Common/TaskInfo'
+import Login from '@/components/Login'
+import User from '@/components/User/User'
+import Admin from '@/components/Admin/Admin'
 Vue.use(Router);
 
 export default new Router({
   routes: [
     {
       path: '/',
-      name: 'WorkSpace',
-      component: WorkSpace
+      name: 'Login',
+      component: Login
     },
     {
       path: '/user',
-      name: 'UserPage',
-      component: UserPage
+      name: 'User',
+      component: User
     },
     {
-      path: '/workhistory',
-      name: 'WorkHistory',
-      component: WorkHistory
+      path: '/admin',
+      name: 'Admin',
+      component: Admin
     },
     {
-      path: '/workspace',
-      name: 'WorkSpace',
-      component: WorkSpace
+      path:"/taskinfo",
+      name:'TaskInfo',
+      component:TaskInfo
     }
   ]
 })
