@@ -25,6 +25,19 @@
         <a href="javascript:void(0);" :class="setclass(3)" v-on:click="goto(3)">用户管理</a>
       </div>
     </div>
+    <div class="right">
+      <el-dropdown class="el-dropdown-area">
+        <span class="el-dropdown-link">
+          <span class="link-text" v-if="role==='user'">您好 {{username}}</span>
+          <span class="link-text" v-else>您好，管理员</span>
+          <i class="el-icon-user" ></i>
+        </span>
+        <el-dropdown-menu class="el-dropdown-items" slot="dropdown">
+          <el-dropdown-item @click.native="logOut">登出</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+
+    </div>
   </div>
 </template>
 
@@ -35,6 +48,7 @@
     data() {
       return {
         role:"user",
+        username:"",
         ifLogged:false,
         menu_index:1
       }
@@ -49,7 +63,9 @@
           console.log(sessionStorage.getItem("userInfo"));
           const userInfo=JSON.parse(sessionStorage.getItem("userInfo"));
           // console.log(userInfo.uid)
-          this.role=userInfo.role
+          this.role=userInfo.role;
+          this.username=userInfo.userName;
+          this.uid=userInfo.uid;
           // this.imageLink=userInfo.imageLink
           // this.token=userInfo.token;
         }
@@ -83,6 +99,10 @@
           return "menu-button selected"
         }
         return "menu-button"
+      },
+      logOut(){
+        sessionStorage.removeItem("userInfo")
+        this.$router.push('/');
       }
   },
   }
@@ -122,7 +142,40 @@
   .menu-item{
     width: 30%;
     font-size: 20px;
+    cursor: pointer;
 
+  }
+
+  .menu-button {
+    color: black;
+  }
+  .selected{
+    color: lightblue;
+  }
+
+  .right{
+    position: absolute;
+    left: 60%;
+    top:30px;
+    width: 30%;
+
+    cursor: pointer;
+  }
+
+
+  .el-dropdown-link{
+    font-size: 30px;
+    width: 100px;
+    text-align: left;
+  }
+
+  .link-text{
+    font-size: 16px;
+  }
+
+  .el-dropdown-items{
+    font-size: 20px;
+    width: 70px;
   }
 
 </style>

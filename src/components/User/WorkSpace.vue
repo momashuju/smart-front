@@ -16,14 +16,11 @@
       </div>
       <div class="progress">
         <div class="task-scripts" v-if="step_index===1">
-          <!--<div class="task-scripts-title">-->
-            <!--选择任务模板-->
-          <!--</div>-->
           <el-table
             ref="singleTable"
             :data="taskTemplates"
             highlight-current-row
-            @current-change="handleCurrentChange"
+            @current-change="selectTaskTemplate"
             style="width: 100%">
             <el-table-column
               type="index"
@@ -60,7 +57,6 @@
 
         </div>
         <div class="task-confirm" v-if="step_index===3">
-          <!--<div class="confirm-title">请确认任务信息</div>-->
           <div>
             <el-table
               :data="info"
@@ -72,9 +68,11 @@
               >
               </el-table-column>
               <el-table-column
-                prop="name"
                 label="任务名称"
                 width="180">
+                <template slot-scope="scope">
+                  <el-input v-model="taskName"></el-input>
+                </template>
               </el-table-column>
             </el-table>
             <el-table
@@ -123,6 +121,7 @@
     data() {
       return {
         msg: 'Welcome to WorkSpace',
+        taskName:"",
         ifLoading:true,
         imgUrl:imgUrl,
         loadingImg:loading,
@@ -151,28 +150,15 @@
           }
         ],
         childrenTaskTemplates:[],
-        info:[{
-          time:"2016-05-02",
-          name:"天气预测",
-          description:"一些相关描述"
-        }],
-        tableData: [{
-          task:"子任务一",
-          name: 'start-year',
-          value: '2001'
-        }, {
-          task:"子任务一",
-          name: 'end-year',
-          value: '2002'
-        },{
-          task:"子任务一",
-          name:"val",
-          value:"true"
-        }]
+        info:[],
+        tableData: []
       }
     },
+    mounted(){
+      this.getTaskTemplates()
+    },
     methods: {
-      handleCurrentChange(val) {
+      selectTaskTemplate(val) {
         let id=val.id;
         let tasks=this.taskTemplates;
         let i;
@@ -186,6 +172,9 @@
       },
       prev(){
         this.step_index-=1;
+        if(this.step_index===1){
+          this.script_index=-1;
+        }
       },
       next(){
         if(this.step_index===1){
@@ -233,88 +222,96 @@
         this.getChildrenTaskTemplates(id);
       },
       getTaskTemplates(){
-
+        this.$axios.get('/userworkspace/getTaskTemplates')
+          .then(response=>{
+            //console.log(response.data);
+            this.taskTemplates=response.data.content;
+          })
+          .catch(error=>{
+            console.log(error);
+          })
       },
       getChildrenTaskTemplates(id){
-        console.log("getChildrenTaskTemplates by id",id);
-        let childrenTaskTemplates=[
-          {
-            id:1,
-            name:"数据预处理",
-            description:"按照输入参数进行数据预处理",
-            index:1,
-            script:"dataPreProcess.ncl",
-            param:[
-              {
-                name:"year",
-                value:"2001 2002 2003 2004"
-              },
-              {
-                name:"area",
-                value:"South North East West"
-              },
-              {
-                name:"variety",
-                value:"True False"
+        let childrenTaskTemplates;
+        this.$axios.get('/userworkspace/getChildrenTaskTemplates',{params:{id:id}})
+          .then(response=>{
+            let resdata=response.data;
+            if(resdata.success){
+              childrenTaskTemplates=resdata.content;
+              let forms=[];
+              let i,j;
+              for(i=0;i<childrenTaskTemplates.length;i++){
+                let params=childrenTaskTemplates[i].params;
+                let list=[];
+                for(j=0;j<params.length;j++){
+                  let param={
+                    name:params[j].name,
+                    value:params[j].values.split(" ")
+                  };
+                  list.push(param);
+                }
+                childrenTaskTemplates[i].param=list;
+                forms.push({
+                  param:[]
+                })
               }
-            ]
-          },
-          {
-            id:2,
-            name:"回报检验",
-            description:"按照输入参数进行回报检验",
-            index:2,
-            script:"select_optimum_modes",
-            param:[
-              {
-                name:"fyear",
-                value:"2001 2002 2003 2004 2005"
-              },
-              {
-                name:"fseason",
-                value:"JFM FMA MAM AMJ MJJ JJA JAS ASO SON OND NDJ DJF"
-              },
-              {
-                name:"variety",
-                value:"True False"
-              }
-            ]
-          }
-        ];
-        let forms=[];
-        let i,j;
-        for(i=0;i<childrenTaskTemplates.length;i++){
-          let params=childrenTaskTemplates[i].param;
-          let list=[];
-          for(j=0;j<params.length;j++){
-            let param={
-              name:params[j].name,
-              value:params[j].value.split(" ")
-            };
-            list.push(param);
-          }
-          childrenTaskTemplates[i].param=list;
-          forms.push({
-            param:[]
+              // console.log(childrenTaskTemplates)
+              this.childrenTaskTemplates=childrenTaskTemplates;
+              this.forms=forms;
+              this.step_index=2;
+            }
+            else{
+            }
           })
-        }
-        // console.log(childrenTaskTemplates)
-        this.childrenTaskTemplates=childrenTaskTemplates;
-        this.forms=forms;
-        this.step_index=2;
+          .catch(error=>{
+            console.log(error);
+          });
       },
-      generateTask(){},
+      generateTask(){
+        if(!this.taskName){
+          this.$message({
+            message: '请输入任务名',
+            type: 'warning'
+          });
+        }
+        const userInfo=JSON.parse(sessionStorage.getItem("userInfo"));
+        let uid=userInfo.uid;
+        let values=[];
+        for(var i=0;i<this.tableData.length;i++){
+          values.push(this.tableData[i].value)
+        }
+        let input=values.join(" ");
+        let data={
+          uid:uid,// 发起请求的用户id
+          name:this.taskName,
+          templateId:this.info[0].id,
+          state:0,//
+          time:this.info[0].time,//任务创建的时间
+          input:input,
+        };
+        console.log(data);
+        this.$axios.post('/userworkspace/generateTask',data).then(
+          (response)=>{
+            console.log(response.data)
+            this.$message({
+              message: '任务已提交给管理员审核',
+              type: 'success'
+            })
+          }
+        ).catch().finally(
+          this.step_index=1
+        )
+      },
       beforeConfirm(){
-        console.log(this.forms);
         let myDate = new Date();
-        let time=myDate.toLocaleDateString();
+        let time=myDate.toLocaleString();
         let task=this.taskTemplates[this.script_index];
         let info=[{
+          id:task.id,
           time:time,
           name:task.name,
           description:task.description
         }];
-        console.log("info",info);
         let childrenTasks=this.childrenTaskTemplates;
         let forms=this.forms;
         let i,j;
@@ -332,12 +329,10 @@
           }
 
         }
-        console.log("data",data);
         this.tableData=data;
         this.info=info;
+        this.taskName=info[0].name
       }
-
-
     }
   }
 </script>

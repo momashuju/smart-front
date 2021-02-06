@@ -15,8 +15,7 @@ Vue.use(FormModel);
 Vue.use(ElementUI);
 Vue.config.productionTip = false;
 Vue.prototype.$axios = axios;
-//axios.defaults.baseURL = 'http://106.15.236.153'
-axios.defaults.baseURL = 'http://127.0.0.1:5000';
+axios.defaults.baseURL = '/api'
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

@@ -38,15 +38,18 @@
 <style scoped lang="less">
   .whole{
     width: 100%;
+    padding-top: 20px;
+    padding-left: 10%;
     display: flex;
     flex-direction: row;
 
     .calendar{
-      width: 30%;
+      width: 40%;
     }
 
     .box-card{
-      width: 70%;
+      padding-top: 20px;
+      width: 60%;
 
       .clearfix:before,
       .clearfix:after {

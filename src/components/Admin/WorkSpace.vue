@@ -1,8 +1,8 @@
 <template>
   <div class="work-history">
     <div class="title">
-        <el-page-header @back="back" content="任务详情" v-if="ifInfo">
-        </el-page-header>
+      <el-page-header @back="back" content="任务详情" v-if="ifInfo">
+      </el-page-header>
     </div>
     <div class="content">
       <div class="taskList" v-if="!ifInfo">
@@ -10,9 +10,9 @@
           <el-radio-group v-model="taskState" @change="changeState">
             <el-radio-button label="3">全部</el-radio-button>
             <el-radio-button label="0">待审核</el-radio-button>
+            <el-radio-button label="-1">已拒绝</el-radio-button>
             <el-radio-button label="1">执行中</el-radio-button>
             <el-radio-button label="2">已完成</el-radio-button>
-            <el-radio-button label="-1">被拒绝</el-radio-button>
           </el-radio-group>
           <el-input
             class="searchInput"
@@ -24,16 +24,23 @@
           </el-input>
         </div>
 
-        <el-table
-          :data="tasks"
-          @sort-change="changeTableSort"
-          style="width: 100%">
+        <el-table :data="tasks"
+                  @sort-change="changeTableSort"
+                  style="width: 100%">
           <el-table-column
             prop="time"
             label="创建日期"
             width="180"
             :sortable="'custom'"
           ></el-table-column>
+          <el-table-column
+              prop="username"
+              label="创建者"
+              width="120"
+              style="text-align: center"
+              :sortable="'custom'"
+            >
+          </el-table-column>
           <el-table-column
             prop="name"
             label="任务名称"
@@ -61,16 +68,12 @@
       </div>
       <div class="taskInfo" v-else>
         <TaskInfo class="taskinfo" :task_id="selectedId" />
-        <div class="verify" v-if="selectedTaskState===2">
-          <el-button  @click="get_result" :loading="ifLoading">查看结果</el-button>
-          <el-button type="primary" @click="download_result">下载结果</el-button>
-        </div>
-        <div class="img" v-if="get_Res">
-          <el-image
-            :src="imgUrl"
-            :fit="fit"></el-image>
+        <div class="verify" v-if="this.selectedTaskState===0">
+          <el-button type="primary" @click="verifyTask(0)">同意</el-button>
+          <el-button type="danger" @click="verifyTask(1)">拒绝</el-button>
         </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -80,41 +83,34 @@
   import imgUrl from "../../assets/img.png"
   import TaskInfo from '../Common/TaskInfo'
   export default {
-    name: 'WorkHistory',
+    name: 'WorkSpace',
     data() {
       return {
         msg: 'Welcome to Work History',
         imgUrl:imgUrl,
         log_index:-1,
         ifInfo:false,
-        tasks:[],
+        tasks:[
+        ],
         selectedId:-1,
         selectedTaskState:0,
+        taskState:3,
         searchText:"",
         sortType:"",
-        taskState:3,
-        get_Res:false,
-        ifLoading: false,
       }
     },
     components:{TaskInfo},
-    mounted(){
-      this.getUserTasks();
-    },
     methods: {
-      getUserTasks(){
-        const userInfo=JSON.parse(sessionStorage.getItem("userInfo"));
-        let uid=userInfo.uid;
+      getAllTasks(){
         let data={
-          uid:uid,
           searchText:this.searchText,
-          state:parseInt(this.taskState),
+          state:this.taskState,
           sortType:this.sortType
         };
-        console.log(data);
-        this.$axios.post('/history/getUserTasks',data).then(
+        //console.log(data);
+        this.$axios.post('/adminworkspace/getAllTasks',data).then(
           (response)=>{
-            console.log(response.data)
+            //console.log(response.data)
             if(response.data.success){
               let tasks=response.data.content;
               for(var i=0;i<tasks.length;i++){
@@ -130,7 +126,7 @@
                     string_state="已完成";
                     break;
                   case -1:
-                    string_state="被拒绝";
+                    string_state="已拒绝";
                     break;
                   default:
                     break;
@@ -139,59 +135,77 @@
               }
               this.tasks=tasks;
             }
+            else{
+
+            }
+
 
           }
         ).catch().finally(
         );
-
-      },
-      handleClick(row){
-        this.ifInfo=true;
-        this.selectedId=row.taskInstanceId;
-        this.selectedTaskState=row.state;
-      },
-      back(){
-        this.ifInfo=false;
-        this.get_Res=false;
-      },
-      changeState:function(s){
-        this.getUserTasks();
       },
       changeTableSort(column) {
-        console.log(column);
+        //console.log(column);
         //获取字段名称和排序类型
-        var fieldName = column.prop;
-        var sortingType = column.order;
+        let fieldName = column.prop;
+        let sortingType = column.order;
         if(fieldName==="time"){
           if(sortingType==="ascending"){
             this.sortType="time";
           }else{
             this.sortType="timeReverse";
           }
+        }else if(fieldName==="username"){
+          this.sortType="user";
         }
-        this.getUserTasks();
+        this.getAllTasks();
+      },
+      handleClick(row){
+        this.ifInfo=true;
+        this.selectedId=row.id;
+        this.selectedTaskState=row.state;
+      },
+      back(){
+        this.ifInfo=false;
+      },
+      verifyTask(index){
+        let data={
+          id:this.selectedId,
+          verifyType:index
+        };
+        this.$axios.post('/adminworkspace/verifyTask',data).then(
+          (response)=>{
+            console.log(response.data)
+          }
+        ).catch().finally(
+          this.getAllTasks()
+        );
+        if(index===0){
+          this.$message({
+            message: '已通过该任务',
+            type: 'success'
+          });
+
+        }
+        else{
+          this.$message({
+            message: '已拒绝该任务',
+            type: 'warning'
+          });
+        }
+
+        this.ifInfo=false;
+
+      },
+      changeState:function(s){
+        this.getAllTasks();
       },
       BindEnter() {
-        this.getUserTasks();
-      },
-      //根据taskInstance的id获取结果,todo
-      get_result(){
-        this.ifLoading=true;
-        this.ifLoading=false;
-        this.$axios.get('/history/getResult',{params:{id:this.selectedId}})
-          .then(response=>{
-            console.log(response.data);
-          })
-          .catch(error=>{
-            console.log(error);
-          });
-        this.get_Res=true;
-
-      },
-      //下载结果.todo
-      download_result(){
-
+        this.getAllTasks();
       }
+    },
+    created() {
+      this.getAllTasks();
     }
   }
 </script>
@@ -238,8 +252,8 @@
           }
         }
       }
-
       .taskInfo{
+
         .taskinfo{
           font-size: 18px;
         }
@@ -249,33 +263,12 @@
           padding-left: 40px;
           text-align: left;
         }
-
-        .img{
-          width: 100%;
-          text-align: left;
-        }
       }
 
 
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 </style>
+
+
