@@ -111,6 +111,11 @@
                 this.tableDatas=data.allParams;
               }
               else{
+                this.$message({
+                  message: resdata.message,
+                  type: 'error',
+                  duration:2000,
+                });
               }
             })
             .catch(error=>{

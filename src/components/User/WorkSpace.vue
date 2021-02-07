@@ -292,19 +292,33 @@
         console.log(data);
         this.$axios.post('/userworkspace/generateTask',data).then(
           (response)=>{
-            console.log(response.data)
-            this.$message({
-              message: '任务已提交给管理员审核',
-              type: 'success'
-            })
+            if(response.data.success){
+              this.$message({
+                message: '任务已提交给管理员审核',
+                type: 'success'
+              });
+              this.step_index=1
+            } else{
+              this.$message({
+                message: response.data.message,
+                type: 'error'
+              });
+            }
+
           }
-        ).catch().finally(
-          this.step_index=1
-        )
+        ).catch()
       },
       beforeConfirm(){
         let myDate = new Date();
-        let time=myDate.toLocaleString();
+        let month=(myDate.getMonth()+1);
+        if(month<10){
+          month="0"+month;
+        }
+        let date=myDate.getDate();
+        if(date<10){
+          date="0"+date;
+        }
+        let time=myDate.getFullYear()+"/"+month+"/"+date+" "+myDate.getHours()+":"+myDate.getMinutes()+":"+myDate.getSeconds();
         let task=this.taskTemplates[this.script_index];
         let info=[{
           id:task.id,

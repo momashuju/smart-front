@@ -8,9 +8,9 @@
       <div class="userList" v-if="!ifInfo">
         <div class="search">
           <el-radio-group v-model="userState" @change="changeState">
-            <el-radio-button label="2">全部</el-radio-button>
-            <el-radio-button label="0">正常</el-radio-button>
-            <el-radio-button label="1">已冻结</el-radio-button>
+            <el-radio-button label="3">全部</el-radio-button>
+            <el-radio-button label="1">正常</el-radio-button>
+            <el-radio-button label="2">已冻结</el-radio-button>
           </el-radio-group>
           <el-input
             class="searchInput"
@@ -34,7 +34,7 @@
               >
               </el-table-column>
               <el-table-column
-                prop="state"
+                prop="string_state"
                 label="用户状态"
                 width="200"
               >
@@ -44,15 +44,13 @@
                 fixed="right"
               >
                 <template slot-scope="scope" >
-                  <el-button  @click="forbidUser(1,scope.row.uid,index)" size="medium" v-if="scope.row.state==='正常'">冻结账户</el-button>
-                  <el-button @click="forbidUser(0,scope.row.uid,index)" type="danger" size="medium" v-else>解除冻结</el-button>
+                  <el-button  @click="forbidUser(2,scope.row)" size="medium" v-if="scope.row.state===1">冻结账户</el-button>
+                  <el-button @click="forbidUser(1,scope.row)" type="danger" size="medium" v-if="scope.row.state===2">解除冻结</el-button>
                 </template>
               </el-table-column>
             </el-table>
           </div>
-
           <div class="add-button">
-            <!--<i class="el-icon-circle-plus"></i>-->
             <el-popover
               placement="right"
               width="400"
@@ -127,7 +125,7 @@
           users:[
           ],
           selectedId:-1,
-          userState:0,
+          userState:3,
           searchText:"",
           newUserForm:{
             username:"",
@@ -149,98 +147,94 @@
       },
       components:{UserPage},
       methods: {
-        init(){
-          this.users=[
-            {
-              uid:1,
-              username:"wlc",
-              state:"正常"
-            },
-            {
-              uid:2,
-              username:"zzh",
-              state:"已冻结"
-            },
-            {
-              uid:3,
-              username:"Duck",
-              state:"正常"
-            },
-            {
-              uid:4,
-              username:"Alice",
-              state:"正常"
-            },
-            {
-              uid:5,
-              username:"Cindy",
-              state:"正常"
-            },
-          ]
-        },
-        changeTableSort(column) {
-          console.log(column);
-
-          //获取字段名称和排序类型
-          var fieldName = column.prop;
-          var sortingType = column.order;
-        },
-        handleClick(row){
-          //console.log(row);
-          this.ifInfo=true;
-          this.selectedId=row.uid;
-        },
-        back(){
-          //console.log("??")
-          this.ifInfo=false;
-        },
-        forbidUser(id,index){
-          let userIndex=-1;
-          if(index){
-            userIndex=index;
-          }
-          else{
-            let i=0;
-            let users=this.users;
-            for(i=0;i<users.length;i++){
-              if(users[i].uid===id){
-                userIndex=i;
-                break;
+        getUsers(){
+          console.log("searchText:",this.searchText,"state",this.userState)
+          this.$axios.get('/user/getAllUsers',{params:{searchText:this.searchText,state:this.userState}}).then(
+            (res)=>{
+              if(res.data.success){
+                let users=res.data.content;
+                console.log(users);
+                for(var i=0;i<users.length;i++){
+                  let string_state="已冻结";
+                  if(users[i].state===1){
+                    string_state="正常"
+                  }
+                  users[i].string_state=string_state;
+                }
+                this.users=users;
+              }
+              else{
+                this.$message({
+                  message: res.data.message,
+                  type: 'error',
+                  duration:2000,
+                });
               }
             }
-          }
-          if(userIndex!==-1){
-            this.users[userIndex].state="已冻结";
-          }
-          this.$message({
-            message: '已冻结该用户',
-            type: 'success'
-          });
-          this.refreshData()
+          ).catch()
         },
-        refreshData(){
-          this.selectedId=-1;
-          this.ifInfo=false;
+        forbidUser(state,row){
+          let id=row.id;
+          let data={
+            id:id,
+            state:state
+          };
+          this.$axios.post('/user/changeState',data).then(
+            (res)=>{
+              if(res.data.success){
+                this.$message({
+                  message: state===0?"解除冻结成功":"冻结成功",
+                  type: 'success',
+                  duration:2000,
+                });
+              }
+              else{
+                this.$message({
+                  message: res.data.message,
+                  type: 'error',
+                  duration:2000,
+                });
+              }
+            }
+          ).catch().finally(
+            this.getUsers()
+          );
+
         },
         changeState:function(s){
-          console.log(s)
+          this.getUsers();
         },
         BindEnter() {
-          console.log("??")
+          this.getUsers();
         },
         submitForm(formName) {
           this.$refs[formName].validate((valid) => {
             if (valid) {
-              alert('submit!');
-              this.users.push(
-                {
-                  uid:1,
-                  username:this.newUserForm.username,
-                  state:"正常"
+              let data={
+                username:this.newUserForm.username,
+                password:this.newUserForm.pass
+              };
+              this.$axios.post('/user/addUser',data).then(
+                (res)=>{
+                  if(res.data.success){
+                    this.$message({
+                      message: "添加用户成功",
+                      type: 'success',
+                      duration:1000,
+                    });
+                  }
+                  else{
+                    this.$message({
+                      message: res.data.message,
+                      type: 'error',
+                      duration:1000,
+                    });
+                  }
                 }
+              ).catch().finally(
+                this.getUsers
               )
             } else {
-              console.log('error submit!!');
               return false;
             }
           });
@@ -250,7 +244,7 @@
         }
       },
       created() {
-        this.init();
+        this.getUsers();
       }
     }
 </script>

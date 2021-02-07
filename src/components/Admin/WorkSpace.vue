@@ -153,7 +153,7 @@
           if(sortingType==="ascending"){
             this.sortType="time";
           }else{
-            this.sortType="timeReverse";
+            this.sortType="time-reverse";
           }
         }else if(fieldName==="username"){
           this.sortType="user";

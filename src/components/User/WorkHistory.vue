@@ -166,7 +166,7 @@
           if(sortingType==="ascending"){
             this.sortType="time";
           }else{
-            this.sortType="timeReverse";
+            this.sortType="time-reverse";
           }
         }
         this.getUserTasks();
