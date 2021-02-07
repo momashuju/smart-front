@@ -1,12 +1,7 @@
 <template>
-  <div class="workspace">
+  <div class="workspace" :key="step_index">
     <div class="main">
       <div class="task-progress-bar">
-        <!--<a-steps :current="step_index-1">-->
-          <!--<a-step title="新建任务"  description="" />-->
-          <!--<a-step title="输入参数"  description="" />-->
-          <!--<a-step title="获取结果" description="" />-->
-        <!--</a-steps>-->
         <el-steps :active="step_index-1" finish-status="success" simple style="margin-top: 20px">
           <el-step title="选择模板" ></el-step>
           <el-step title="输入参数" ></el-step>
@@ -57,7 +52,7 @@
 
         </div>
         <div class="task-confirm" v-if="step_index===3">
-          <div>
+
             <el-table
               :data="info"
               style="width: 100%">
@@ -75,25 +70,29 @@
                 </template>
               </el-table-column>
             </el-table>
-            <el-table
-              :data="tableData"
-              style="width: 100%">
-              <el-table-column
-                prop="task"
-                label="所属任务"
-                width="180">
-              </el-table-column>
-              <el-table-column
-                prop="name"
-                label="参数名"
-                width="180">
-              </el-table-column>
-              <el-table-column
-                prop="value"
-                label="参数值"
-                width="180">
-              </el-table-column>
-            </el-table>
+          <div class="confirm-children">
+            <div v-for="(data,index) in tableData" class="confirm-child">
+              <el-table
+                :data="data.params"
+                style="width: 100%">
+                <el-table-column
+                  :label="data.name"
+                  type="index"
+                  width="180">
+                </el-table-column>
+                <el-table-column
+                  prop="name"
+                  label="参数名"
+                  width="180">
+                </el-table-column>
+                <el-table-column
+                  prop="value"
+                  label="参数值"
+                  width="180">
+                </el-table-column>
+              </el-table>
+            </div>
+
           </div>
         </div>
 
@@ -132,23 +131,7 @@
         params: [],
         forms: [],
         tempInput: '',
-        taskTemplates:[
-          {
-            id:1,
-            name:"天气预测",
-            description:"进行局部范围内的天气预测，需要进行数据预处理等工作"
-          },
-          {
-            id:2,
-            name:"气温预测",
-            description:"进行局部范围内的气温预测，需要进行数据预处理等工作"
-          },
-          {
-            id:3,
-            name:"降水量预测",
-            description:"进行局部范围内的降水量预测，需要进行数据预处理等工作"
-          }
-        ],
+        taskTemplates:[],
         childrenTaskTemplates:[],
         info:[],
         tableData: []
@@ -276,11 +259,17 @@
         }
         const userInfo=JSON.parse(sessionStorage.getItem("userInfo"));
         let uid=userInfo.uid;
-        let values=[];
+        let values="";
         for(var i=0;i<this.tableData.length;i++){
-          values.push(this.tableData[i].value)
+          let task=this.tableData[i];
+          let childValue=[];
+          for(var j=0;j<task.params.length;j++){
+            childValue.push(task.params[j].value);
+          }
+          childValue=childValue.join(" ");
+          values+="\""+childValue+"\"";
         }
-        let input=values.join(" ");
+        let input=values;
         let data={
           uid:uid,// 发起请求的用户id
           name:this.taskName,
@@ -289,19 +278,20 @@
           time:this.info[0].time,//任务创建的时间
           input:input,
         };
-        console.log(data);
         this.$axios.post('/userworkspace/generateTask',data).then(
           (response)=>{
             if(response.data.success){
               this.$message({
                 message: '任务已提交给管理员审核',
-                type: 'success'
+                type: 'success',
+                duration:500
               });
               this.step_index=1
             } else{
               this.$message({
                 message: response.data.message,
-                type: 'error'
+                type: 'error',
+                duration:500
               });
             }
 
@@ -331,17 +321,19 @@
         let i,j;
         let data=[];
         for(i=0;i<childrenTasks.length;i++){
+          let task={};
           let name=childrenTasks[i].name;
+          task.name=name;
+          task.params=[];
           let params=childrenTasks[i].param;
           let values=forms[i].param;
           for(j=0;j<params.length;j++){
-            data.push({
-              task:name,
+            task.params.push({
               name: params[j].name,
               value: values[j]
             })
           }
-
+          data.push(task);
         }
         this.tableData=data;
         this.info=info;

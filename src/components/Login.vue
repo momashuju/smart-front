@@ -203,17 +203,15 @@
           password:this.pwd
         };
 
-
-
         this.isUserBtnLoading=true;
         this.$axios.post('/user/loginUser',data).then(
            (response)=>{
              let resdata=response.data;
              if(resdata.success){
                let content=resdata.content;
+               console.log(content)
                const userInfo = {
-                 //'uid': content.uid,
-                 'uid':2,
+                 'uid': content.id,
                  'userName': this.name,
                  'password':this.pwd,
                  "role":"user"
@@ -243,20 +241,13 @@
           this.$message.error('请输入密码');
         }
         const data={
-          userName:this.name,
+          username:this.name,
           password:this.pwd
         };
 
         this.isAdminBtnLoading=true;
-        const userInfo = {
-          //'uid': content.uid,
-          'uid':1,
-          'userName': this.name,
-          'password':this.pwd,
-          "role":"admin"
-        };
-        sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
-        this.$router.push('/admin');
+
+        console.log(data)
         this.$axios.post('/user/loginAdmin',data).then(
           (response)=>{
             let resdata=response.data;
@@ -264,8 +255,7 @@
             if(resdata.success){
               let content=resdata.content;
               const userInfo = {
-                //'uid': content.uid,
-                'uid':1,
+                'uid': content.id,
                 'userName': this.name,
                 'password':this.pwd,
                 "role":"admin"

@@ -94,7 +94,7 @@
         ],
         selectedId:-1,
         selectedTaskState:0,
-        taskState:3,
+        taskState:0,
         searchText:"",
         sortType:"",
       }
